@@ -106,12 +106,180 @@ kdtree = ( function() {
         right : null
     };
 
-    kdtree.KdTree = function kdtreeKdTree() {
+    kdtree.KdTree = function kdtreeKdTree(root, opts) {
+        this.root = root;
+        this.opts = opts;
+    };
+    kdtree.KdTree.prototype = {
+        root : null,
+        opts : null,
+        search : function kdtreeSearch(point, noOfNeighs) {
+            if(point.length !== this.opts.k) {
+                throw {
+                    "msg" : "Incorrect point dimension!"
+                };
+            }
+            noOfNeighs = noOfNeighs || 1;
+            var bounds = {
+                upper : [],
+                lower : []
+            };
+            //Initialization
+            point.forEach(function(x, i) {
+                bounds.lower[i] = -Infinity;
+                bounds.upper[i] = Infinity;
+            });
+            var i;
+            var queue = [];
+            for( i = 0; i < noOfNeighs; ++i) {
+                queue.push({
+                    node : null,
+                    dist : Infinity
+                });
+            }
+            //Searching
+            var searchRight = function(d, p, node) {
+                var temp = bounds.lower[d];
+                bounds.lower[d] = p;
+                if(search(node.right)) {
+                    return true;
+                }
+                bounds.lower[d] = temp;
+                return false;
+            };
+            var searchLeft = function(d, p, node) {
+                var temp = bounds.upper[d];
+                bounds.upper[d] = p;
+                if(search(node.left)) {
+                    return true;
+                }
+                bounds.upper[d] = temp;
+                return false;
+            };
+            var opts = this.opts;
+            var search = function kdtreeSearch2(node) {
+                if(node.isBucket) {
+                    node.values.forEach(function(x) {
+                        var i, dist, len;
+                        dist = kdtree.distance(x, point, opts);
+                        len = queue.length;
+                        for( i = 0; i < len; ++i) {
+                            if(dist >= queue[i].dist) {
+                                return;
+                            }
+                        }
+                        //update queue
+                        queue.push({
+                            node : x,
+                            dist : dist
+                        });
+                        //sort
+                        queue.sort(function(a, b) {
+                            return b.dist - a.dist;
+                        });
+                        //trim
+                        queue.splice(0, 1);
+                    });
+                    if(kdtree.ballWithinBounds(point, bounds, queue, opts)) {
+                        return true;
+                    }
+                    return false;
+                }
+                var temp, d, p;
+                d = node.discr;
+                p = node.partition;
+                //go to closer son
+                if(point[d] <= p) {
+                    if(searchLeft(d, p, node)) {
+                        return true;
+                    }
+                } else {
+                    if(searchRight(d, p, node)) {
+                        return true;
+                    }
+                }
+                //recursive call on farther son (if necessary)
+                if(point[d] <= p) {
+                    temp = bounds.lower[d];
+                    bounds.lower[d] = p;
+                    if(kdtree.boundsOverlapBall(point, bounds, queue, opts)) {
+                        if(search(node.right)) {
+                            return true;
+                        }
+                    }
+                    bounds.lower[d] = temp;
+                } else {
+                    temp = bounds.upper[d];
+                    bounds.upper[d] = p;
+                    if(kdtree.boundsOverlapBall(point, bounds, queue, opts)) {
+                        if(search(node.left)) {
+                            return true;
+                        }
+                    }
+                    bounds.upper[d] = temp;
+                }
+                //Terminate?
+                if(kdtree.ballWithinBounds(point, bounds, queue, opts)) {
+                    return true;
+                }
+                return false;
+            };
+            search(this.root);
 
+            var ret = [];
+            queue.forEach(function(x){
+               ret.push(x.node);
+            });
+            if (ret.length === 1) {
+                return ret[0];
+            }
+            return ret;
+        }
+    };
+    kdtree.distance = function kdtreeDistance(a, b, opts) {
+        var i, sum = 0;
+        for( i = 0; i < a.length; ++i) {
+            sum = sum + kdtree.coordinateDistance(i, a, b, opts);
+        }
+        return opts.dissim(sum);
+    };
+    kdtree.coordinateDistance = function kdtreeCoordinateDistance(coord, point, bound, opts) {
+        return opts.coordinateDistance(point[coord], bound[coord]);
+    };
+    kdtree.ballWithinBounds = function kdtreeBallWithinBounds(point, bounds, queue, opts) {
+        var d, firstDist;
+        firstDist = queue[0].dist;
+
+        for( d = 0; d < point.length; ++d) {
+            if(kdtree.coordinateDistance(d, point, bounds.lower, opts) <= firstDist || kdtree.coordinateDistance(d, point, bounds.upper, opts) <= firstDist) {
+                return false;
+            }
+        }
+        return true;
+    };
+    kdtree.boundsOverlapBall = function kdtreeBoundsOverlapBall(point, bounds, queue, opts) {
+        var sum, d;
+        sum = 0;
+        var firstDist = queue[0].dist;
+        for( d = 0; d < point.length; ++d) {
+            if(point[d] < bounds.lower[d]) {
+                sum = sum + kdtree.coordinateDistance(d, point, bounds.lower, opts);
+                if(opts.dissim(sum) > firstDist) {
+                    return true;
+                }
+            } else if(point[d] > bounds.upper[d]) {
+                sum = sum + kdtree.coordinateDistance(d, point, bounds.upper, opts);
+                if(opts.dissim(sum) > firstDist) {
+                    return true;
+                }
+            }
+        }
+        return false;
     };
     kdtree.spreadEst = function kdtreeSpreadEst(coordinate, data) {
         //find min and max
-        var min, max = data[0][coordinate];
+        var min, max;
+        min = max = data[0][coordinate];
         data.forEach(function(x) {
             var v = x[coordinate];
             if(v < min) {
@@ -133,7 +301,8 @@ kdtree = ( function() {
         var left = [], right = [];
         //TODO: better implementation: in-situ and split
         data.forEach(function(x) {
-            if(x[coord] < pivot) {
+            //Pivots has to be in left part!
+            if(x[coord] <= pivot) {
                 left.push(x);
             } else {
                 right.push(x);
@@ -191,11 +360,20 @@ kdtree = ( function() {
             }
             //Prepare options
             opts = kdtree.utils.extend({
-                bucketSize : 10
+                bucketSize : 10,
+                dissim : function(sum) {
+                    return Math.sqrt(sum);
+                },
+                coordinateDistance : function(a, b) {
+                    var d = a - b;
+                    return d * d;
+                }
             }, opts);
             opts.k = data[0].length;
 
-            return kdtree.buildTree(data, opts);
+            var root = kdtree.buildTree(data, opts);
+
+            return new kdtree.KdTree(root, opts);
         },
         _kdtree : kdtree
     };
