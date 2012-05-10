@@ -113,6 +113,9 @@ kdtree = ( function() {
     kdtree.KdTree.prototype = {
         root : null,
         opts : null,
+        distance : function kdtreeDistance(pointA, pointB) {
+           return kdtree.distance(pointA, pointB, this.opts);
+        },
         search : function kdtreeSearch(point, noOfNeighs) {
             if(point.length !== this.opts.k) {
                 throw {
@@ -138,24 +141,6 @@ kdtree = ( function() {
                 });
             }
             //Searching
-            var searchRight = function(d, p, node) {
-                var temp = bounds.lower[d];
-                bounds.lower[d] = p;
-                if(search(node.right)) {
-                    return true;
-                }
-                bounds.lower[d] = temp;
-                return false;
-            };
-            var searchLeft = function(d, p, node) {
-                var temp = bounds.upper[d];
-                bounds.upper[d] = p;
-                if(search(node.left)) {
-                    return true;
-                }
-                bounds.upper[d] = temp;
-                return false;
-            };
             var opts = this.opts;
             var search = function kdtreeSearch2(node) {
                 if(node.isBucket) {
@@ -163,9 +148,12 @@ kdtree = ( function() {
                         var i, dist, len;
                         dist = kdtree.distance(x, point, opts);
                         len = queue.length;
-                        for( i = 0; i < len; ++i) {
-                            if(dist >= queue[i].dist) {
-                                return;
+                        //Check elements in queue but only if it is full
+                        if(queue[0].node !== null) {
+                            for( i = 0; i < len; ++i) {
+                                if(dist >= queue[i].dist) {
+                                    return;
+                                }
                             }
                         }
                         //update queue
@@ -190,13 +178,19 @@ kdtree = ( function() {
                 p = node.partition;
                 //go to closer son
                 if(point[d] <= p) {
-                    if(searchLeft(d, p, node)) {
+                    temp = bounds.upper[d];
+                    bounds.upper[d] = p;
+                    if(search(node.left)) {
                         return true;
                     }
+                    bounds.upper[d] = temp;
                 } else {
-                    if(searchRight(d, p, node)) {
+                    temp = bounds.lower[d];
+                    bounds.lower[d] = p;
+                    if(search(node.right)) {
                         return true;
                     }
+                    bounds.lower[d] = temp;
                 }
                 //recursive call on farther son (if necessary)
                 if(point[d] <= p) {
@@ -224,7 +218,7 @@ kdtree = ( function() {
                 }
                 return false;
             };
-            search(this.root);
+            var res = search(this.root);
 
             var ret = [];
             queue.forEach(function(x){
@@ -238,7 +232,7 @@ kdtree = ( function() {
     };
     kdtree.distance = function kdtreeDistance(a, b, opts) {
         var i, sum = 0;
-        for( i = 0; i < a.length; ++i) {
+        for( i = 0; i < opts.k; ++i) {
             sum = sum + kdtree.coordinateDistance(i, a, b, opts);
         }
         return opts.dissim(sum);
@@ -250,7 +244,7 @@ kdtree = ( function() {
         var d, firstDist;
         firstDist = queue[0].dist;
 
-        for( d = 0; d < point.length; ++d) {
+        for( d = 0; d < opts.k; ++d) {
             if(kdtree.coordinateDistance(d, point, bounds.lower, opts) <= firstDist || kdtree.coordinateDistance(d, point, bounds.upper, opts) <= firstDist) {
                 return false;
             }
@@ -261,7 +255,7 @@ kdtree = ( function() {
         var sum, d;
         sum = 0;
         var firstDist = queue[0].dist;
-        for( d = 0; d < point.length; ++d) {
+        for( d = 0; d < opts.k; ++d) {
             if(point[d] < bounds.lower[d]) {
                 sum = sum + kdtree.coordinateDistance(d, point, bounds.lower, opts);
                 if(opts.dissim(sum) > firstDist) {
@@ -367,9 +361,9 @@ kdtree = ( function() {
                 coordinateDistance : function(a, b) {
                     var d = a - b;
                     return d * d;
-                }
+                },
+                k : data[0].length
             }, opts);
-            opts.k = data[0].length;
 
             var root = kdtree.buildTree(data, opts);
 
