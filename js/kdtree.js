@@ -1,7 +1,7 @@
-kdtree = ( function() {
+( function(global) {"use strict";
     var kdtree = {};
     kdtree.utils = {
-        extend : function utilsExtend(obj) {
+        extend : function utilsExtend(obj /* args */) {
             var i, args;
             args = Array.prototype.slice.call(arguments, 1);
             args.forEach(function(ext) {
@@ -32,16 +32,19 @@ kdtree = ( function() {
             swap(right, newIndex);
             return newIndex;
         },
+        /**
+         * Randomized select to run in O(n)
+         */
         select : function utilsSelect(data, k) {
             var select = function select(left, right) {
-                if(left == right) {
+                if(left === right) {
                     return data[left];
                 }
                 //Select pivot
                 var pivotIndex = left + Math.floor(Math.random() * (right - left + 1));
                 //partition
                 pivotIndex = kdtree.utils.partition(data, left, right, pivotIndex);
-                if(pivotIndex == k) {
+                if(pivotIndex === k) {
                     return data[pivotIndex];
                 }
                 //TODO no reccurence!
@@ -52,6 +55,9 @@ kdtree = ( function() {
             };
             return select(0, data.length - 1);
         },
+        /**
+         * Get median from data array
+         */
         median : function utilsMedian(data) {
             return kdtree.utils.select(data, Math.floor(data.length / 2));
         }
@@ -106,6 +112,9 @@ kdtree = ( function() {
         right : null
     };
 
+    /**
+     * Main KdTree class.
+     */
     kdtree.KdTree = function kdtreeKdTree(root, opts) {
         this.root = root;
         this.opts = opts;
@@ -113,9 +122,20 @@ kdtree = ( function() {
     kdtree.KdTree.prototype = {
         root : null,
         opts : null,
+        /**
+         * Calculate distance between two points using dissimilarity function
+         * from options.
+         */
         distance : function kdtreeDistance(pointA, pointB) {
-           return kdtree.distance(pointA, pointB, this.opts);
+            return kdtree.distance(pointA, pointB, this.opts);
         },
+        /**
+         * Search for nearest neighbors of given point.
+         * @param point
+         * @param noOfNeighs number of neighbors to find
+         * @return Array of nearest neighbors of point (when noOfNeighs===1 -
+         * return single node)
+         */
         search : function kdtreeSearch(point, noOfNeighs) {
             if(point.length !== this.opts.k) {
                 throw {
@@ -143,6 +163,7 @@ kdtree = ( function() {
             //Searching
             var opts = this.opts;
             var search = function kdtreeSearch2(node) {
+                //Search in bucket
                 if(node.isBucket) {
                     node.values.forEach(function(x) {
                         var i, dist, len;
@@ -221,15 +242,18 @@ kdtree = ( function() {
             var res = search(this.root);
 
             var ret = [];
-            queue.forEach(function(x){
-               ret.push(x.node);
+            queue.forEach(function(x) {
+                ret.push(x.node);
             });
-            if (ret.length === 1) {
+            if(ret.length === 1) {
                 return ret[0];
             }
             return ret;
         }
     };
+    /**
+     * Calculate distance between two points with given options.
+     */
     kdtree.distance = function kdtreeDistance(a, b, opts) {
         var i, sum = 0;
         for( i = 0; i < opts.k; ++i) {
@@ -237,6 +261,9 @@ kdtree = ( function() {
         }
         return opts.dissim(sum);
     };
+    /**
+     * Calculate distance between single coordinate.
+     */
     kdtree.coordinateDistance = function kdtreeCoordinateDistance(coord, point, bound, opts) {
         return opts.coordinateDistance(point[coord], bound[coord]);
     };
@@ -270,6 +297,9 @@ kdtree = ( function() {
         }
         return false;
     };
+    /**
+     * Calculate spread estimatimation (range).
+     */
     kdtree.spreadEst = function kdtreeSpreadEst(coordinate, data) {
         //find min and max
         var min, max;
@@ -284,6 +314,9 @@ kdtree = ( function() {
         });
         return max - min;
     };
+    /**
+     * Find median of values at given coordinate.
+     */
     kdtree.median = function kdtreeMedian(coord, orgData) {
         var data = [];
         orgData.forEach(function(x) {
@@ -291,6 +324,9 @@ kdtree = ( function() {
         });
         return kdtree.utils.median(data);
     };
+    /**
+     * Create partition of data around pivot at given coordinate.
+     */
     kdtree.partition = function kdtreePartition(coord, pivot, data) {
         var left = [], right = [];
         //TODO: better implementation: in-situ and split
@@ -307,6 +343,7 @@ kdtree = ( function() {
             right : right
         };
     };
+    /** Create tree */
     kdtree.buildTree = function kdtreeBuildTree(data, opts) {
         //Return terminal node
         if(data.length <= opts.bucketSize) {
@@ -331,10 +368,16 @@ kdtree = ( function() {
 
         return new kdtree.Node(maxCoord, median, left, right);
     };
-    return {
+    //Export
+    global.kdtree = {
         /**
+         * Builds optimal tree for data using spread estimation. Implementation
+         * is based on paper:
+         * "An algorithm for finding best matches in logarithmic expected
+         * time.", JH Friedman, JL Bentley, 1977
+         *
          * @param data Array of points (Matrix)
-         * @param opts Additional options
+         * @param opts Additional options (bucketSize, etc)
          */
         buildTree : function kdtreeBuildTree(data, opts) {
             if(!Array.isArray(data)) {
@@ -342,7 +385,7 @@ kdtree = ( function() {
                     "msg" : "Data argument have to be an array."
                 };
             }
-            if(data.length == 0) {
+            if(!data.length) {
                 throw {
                     "msg" : "Data cannot be empty."
                 };
@@ -354,21 +397,32 @@ kdtree = ( function() {
             }
             //Prepare options
             opts = kdtree.utils.extend({
+                /**
+                 * Defines bucket (terminal node) maximal size
+                 */
                 bucketSize : 10,
+                /**
+                 * Data dimension
+                 */
+                k : data[0].length,
+                /**
+                 * Dissimilarity function
+                 */
                 dissim : function(sum) {
                     return Math.sqrt(sum);
                 },
+                /**
+                 * Coordinate distance
+                 */
                 coordinateDistance : function(a, b) {
                     var d = a - b;
                     return d * d;
-                },
-                k : data[0].length
+                }
             }, opts);
 
             var root = kdtree.buildTree(data, opts);
-
             return new kdtree.KdTree(root, opts);
         },
         _kdtree : kdtree
     };
-}());
+}(this));
