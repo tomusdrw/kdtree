@@ -1,0 +1,49 @@
+<!doctype html>
+<html class="no-js" lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Nearest points - blacksoft.kdtree</title>
+        <meta name="description" content="Find nearest points from set.">
+        <meta name="author" content="blacksoft.eu">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/style2.css">
+        <link rel="stylesheet" href="css/960_12_col.css">
+        <script src="js/libs/modernizr-2.5.3.min.js"></script>
+    </head>
+    <body class="container_12">
+        <header class="grid_12">
+            blacksoft.kdtree | <a href="index.html">back to other examples</a>
+        </header>
+        <div role="main">
+            <h1 class="grid_12">Nearest points</h1>
+            <!-- Settings //-->
+            <div class="grid_2 settings">
+                <label># points</label>
+                <input id="points" type="number" min="10" max="100000000" value="10000" />
+                <label># of neigbours</label>
+                <input id="neighs" type="number" min="1" max="1000000" value="10" />
+                <br />
+                <br />
+                <button id="populate">
+                    Populate
+                </button>
+            </div>
+            <!-- Canvas //-->
+            <div class="grid_10 canvas">
+                <canvas width="600" height="500" id="canvas">
+                    Canvas not supported
+                </canvas>
+            </div>
+        </div>
+        <footer class="grid_1 prefix_11">
+            <a href="http://blacksoft.eu">blacksoft.eu</a>
+        </footer>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>
+        <script src="js/analitics.js"></script>
+        <script src="../js/kdtree.js"></script>
+        <script src="js/nearest_neighbors.js"></script>
+    </body>
+</html>
