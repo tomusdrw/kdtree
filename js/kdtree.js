@@ -13,23 +13,24 @@
             });
             return obj;
         },
+        swap : function utilsSwap(data, i, j) {
+            var t = data[i];
+            data[i] = data[j];
+            data[j] = t;
+        },
         partition : function utilsPartition(data, left, right, pivotIndex) {
-            var swap = function(i, j) {
-                var t = data[i];
-                data[i] = data[j];
-                data[j] = t;
-            };
-            var pivot, newIndex, i;
+            var pivot, newIndex, i, swap = kdtree.utils.swap;
             pivot = data[pivotIndex];
-            swap(pivotIndex, right);
+            swap(data, pivotIndex, right);
             newIndex = left;
             for( i = left; i < right; ++i) {
                 if(data[i] < pivot) {
-                    swap(newIndex, i); ++newIndex;
+                    swap(data, newIndex, i);
+                    ++newIndex;
                 }
             }
             //move pivot
-            swap(right, newIndex);
+            swap(data, right, newIndex);
             return newIndex;
         },
         /**
@@ -279,23 +280,23 @@
         return true;
     };
     kdtree.boundsOverlapBall = function kdtreeBoundsOverlapBall(point, bounds, queue, opts) {
-        var sum, d;
+        var sum, d, firstDist;
+        firstDist = queue[0].dist;
         sum = 0;
-        var firstDist = queue[0].dist;
         for( d = 0; d < opts.k; ++d) {
             if(point[d] < bounds.lower[d]) {
                 sum = sum + kdtree.coordinateDistance(d, point, bounds.lower, opts);
                 if(opts.dissim(sum) > firstDist) {
-                    return true;
+                    return false;
                 }
             } else if(point[d] > bounds.upper[d]) {
                 sum = sum + kdtree.coordinateDistance(d, point, bounds.upper, opts);
                 if(opts.dissim(sum) > firstDist) {
-                    return true;
+                    return false;
                 }
             }
         }
-        return false;
+        return true;
     };
     /**
      * Calculate spread estimatimation (range).

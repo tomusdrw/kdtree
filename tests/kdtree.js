@@ -17,6 +17,39 @@ QUnit.specify("kdtree", function() {
 
     var cut = kdtree._kdtree;
 
+
+     describe("kdtree.buildTree2", function(){
+
+         //bug fix for
+         it('should find exact number of neighbours', function(){
+             //given
+            var data = [
+                [168, 284],
+                [217, 421],
+                [271, 152],
+                [112, 199],
+                [548, 335],
+                [184, 456],
+                [564, 300],
+                [505, 172],
+                [317, 318],
+                [96, 450],
+                [39, 63]
+            ];
+            var search = [398, 145];
+            var noOfNeighs = 6;
+
+            var tree = cut.buildTree(data);
+            console.log(tree);
+            //when
+            var result = tree.search(search, noOfNeighs);
+
+            console.log(result);
+            //then
+            assert(result[0]).isNotNull();
+         });
+     });
+
     describe("kdtree.utils.partition", function() {
         var utils = cut.utils;
         given(

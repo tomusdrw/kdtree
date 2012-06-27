@@ -58,7 +58,9 @@
     }).trigger('click');
 
     $canvas.bind('click', function(e) {
+        console.time("Searching.");
         var neighbors = data.tree.search([e.offsetX, e.offsetY], $('#neighs').val());
+        console.timeEnd("Searching.");
         if (!neighbors.forEach) {
             neighbors = [neighbors];
         }
