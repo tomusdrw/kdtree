@@ -372,27 +372,60 @@
         };
     };
     /** Create tree */
-    kdtree.buildTree = function kdtreeBuildTree(data, opts) {
-        //Return terminal node
-        if(data.length <= opts.bucketSize) {
-            return new kdtree.Bucket(data);
-        }
-        //Find coordinate with greatest spread
-        var maxSpread, estSpread, maxCoord, median, part, left, right, j;
-        maxSpread = 0;
-        for( j = 0; j < opts.k; ++j) {
-            estSpread = kdtree.spreadEst(j, data);
-            if(estSpread > maxSpread) {
-                maxSpread = estSpread;
-                maxCoord = j;
-            }
-        }
-        median = kdtree.median(maxCoord, data);
-        part = kdtree.partition(maxCoord, median, data);
+    kdtree.buildTree = function kdtreeBuildTree(initData, opts) {
+        var data = null;
+        var builded = [];
+        var mergeParams = [];
+        var buildTreeStack = [initData];
+        do {
+            data = buildTreeStack.pop();
+            //Return terminal node
+            if(data.length <= opts.bucketSize) {
+                builded.push(new kdtree.Bucket(data));
+            } else {
+                //Find coordinate with greatest spread
+                var maxSpread, estSpread, maxCoord, median, part, left, right, j;
+                maxSpread = 0;
+                for( j = 0; j < opts.k; ++j) {
+                    estSpread = kdtree.spreadEst(j, data);
+                    if(estSpread > maxSpread) {
+                        maxSpread = estSpread;
+                        maxCoord = j;
+                    }
+                }
+                median = kdtree.median(maxCoord, data);
+                part = kdtree.partition(maxCoord, median, data);
 
-        //TODO: maybe some callbacks to make it "less recursive"?
-        left = kdtree.buildTree(part.left, opts);
-        right = kdtree.buildTree(part.right, opts);
+                //TODO: maybe some callbacks to make it "less recursive"?
+                // left = kdtree.buildTree(part.left, opts);
+                // right = kdtree.buildTree(part.right, opts);
+                buildTreeStack.push(part.left);
+                buildTreeStack.push(part.right);
+                mergeParams.push({
+                    maxCoord : maxCoord,
+                    median : median
+                });
+            }
+        } while (buildTreeStack.length);
+
+        //create nodes from builded queue
+        var left, right, current, params;
+        params = current = null;
+        while(builded.length) {
+            left = builded.pop();
+            if(!builded.length) {
+                //just single node
+                return left;
+            }
+            //get right node
+            right = builded.pop();
+            //get params to merge
+            params = mergeParams.pop();
+            //create new node
+            current = new kdtree.Node(params.maxCoord, params.median, left, right);
+            //put back to queue
+            builded.push(current);
+        }
 
         return new kdtree.Node(maxCoord, median, left, right);
     };

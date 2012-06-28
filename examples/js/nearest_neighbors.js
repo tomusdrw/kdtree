@@ -48,6 +48,9 @@
 
         //create new points
         data.points = utils.generatePoints($('#points').val(), width, height);
+        if (data.points.length < 100) {
+            console.log(JSON.stringify(data.points));
+        }
         //build tree with default options
         console.time("Building tree");
         data.tree = kdtree.buildTree(data.points);
@@ -60,6 +63,7 @@
     }).trigger('click');
 
     $canvas.bind('click', function(e) {
+        console.log(e.offsetX, e.offsetY);
         console.time("Searching (kdtree)");
         var neighbors = data.tree.search([e.offsetX, e.offsetY], $('#neighs').val());
         console.timeEnd("Searching (kdtree)");
