@@ -91,7 +91,6 @@
         }
     };
 
-
     /**
      * Terminal node - bucket
      * @param values Array of values in this bucket
@@ -195,33 +194,24 @@
                 //Search in bucket
                 if(node.isBucket) {
                     node.values.forEach(function(x) {
-                        var i, dist, len, breaked;
+                        var i, dist, len;
                         dist = kdtree.distance(x, point, opts);
                         len = queue.length;
                         //Check elements in queue but only if it is full
-                        breaked = false;
-                        for( i = 0; i < len; ++i) {
+                        for( i = len - 1; i >= 0; --i) {
                             if(dist < queue[i].dist) {
-                                breaked = true;
-                                break;
+                                //found place to put
+                                //update queue
+                                queue.splice(i + 1, 0, {
+                                    node : x,
+                                    dist : dist
+                                });
+                                //trim
+                                queue.splice(0, 1);
+                                return;
                             }
                         }
-                        if(!breaked) {
-                            return
-                        }
-                        //update queue
-                        queue.push({
-                            node : x,
-                            dist : dist
-                        });
-                        //sort
-                        queue.sort(function(a, b) {
-                            return b.dist - a.dist;
-                        });
-                        //trim
-                        queue.splice(0, 1);
                     });
-
                     if(kdtree.ballWithinBounds(point, bounds, queue, opts)) {
                         return true;
                     }
@@ -268,7 +258,7 @@
                 }
                 //Terminate?
                 if(kdtree.ballWithinBounds(point, bounds, queue, opts)) {
-                   return true;
+                    return true;
                 }
                 return false;
             };
