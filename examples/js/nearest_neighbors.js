@@ -48,11 +48,10 @@
 
         //create new points
         data.points = utils.generatePoints($('#points').val(), width, height);
-        if (data.points.length < 50) {
-            console.log(JSON.stringify(data.points));
-        }
         //build tree with default options
+        console.time("Building tree");
         data.tree = kdtree.buildTree(data.points);
+        console.timeEnd("Building tree");
 
         //clear canvas and draw points
         ctx.clearRect(0, 0, width, height);
@@ -62,17 +61,17 @@
 
     $canvas.bind('click', function(e) {
         console.time("Searching (kdtree)");
-        console.log("Searching (kdtree)", e.offsetX, e.offsetY);
         var neighbors = data.tree.search([e.offsetX, e.offsetY], $('#neighs').val());
         console.timeEnd("Searching (kdtree)");
-        if (!neighbors.forEach) {
+        console.time("Searching (linear)");
+        kdtree._kdtree.utils.linearSearch(data.points, [e.offsetX, e.offsetY], $('#neighs').val());
+        console.timeEnd("Searching (linear)");
+
+        if(!neighbors.forEach) {
             neighbors = [neighbors];
         }
         utils.setSelectedStyles(ctx);
         utils.drawPoints(ctx, neighbors);
-        console.time("Searching (linear)");
-        kdtree._kdtree.utils.linearSearch(data.points, [e.offsetX, e.offsetY], $('#neighs').val());
-        console.timeEnd("Searching (linear)");
     });
     //canvas handling
 }());
