@@ -2,7 +2,7 @@ QUnit.specify("kdtree", function() {
     QUnit.specify.extendAssertions({
         arrayEquals : function(actual, expected, message) {
             if (!message) {
-                message = "expected: " + expected + ", got: "+actual;
+                message = "expected: " + JSON.stringify(expected) + ", got: "+JSON.stringify(actual);
             }
             var isOk = true;
             isOk = actual.length == expected.length;
@@ -10,48 +10,44 @@ QUnit.specify("kdtree", function() {
                 for (var i = 0; i<actual.length; ++i) {
                     isOk = isOk & (actual[i] == expected[i]);
                 }
+            } else {
+                message = message + " (expected size: "+expected.length+" got: "+actual.length+")";
             }
             ok(isOk, message);
         }
     });
 
     var cut = kdtree._kdtree;
+    var utils = cut.utils;
+    describe("kdtree.buildTree2", function() {
+        var data = {
+            data1 : [[168, 284], [217, 421], [271, 152], [112, 199], [548, 335], [184, 456], [564, 300], [505, 172], [317, 318], [96, 450], [39, 63]],
+            data2 : [[17, 468], [521, 255], [555, 190], [5, 247], [485, 59], [574, 249], [559, 228], [26, 20], [58, 16], [292, 124], [302, 331]],
+            data3 : [[500,52],[38,271],[579,105],[158,256],[594,330],[474,268],[418,329],[188,112],[556,396],[376,15],[247,393],[22,72],[304,18],[524,31],[461,220],[19,401],[91,10],[277,230],[138,87],[583,261],[103,0],[319,127],[215,403],[577,305],[36,74],[101,183],[222,445],[34,389],[34,411],[490,216],[324,338],[236,21],[371,436],[523,372],[517,418],[281,407],[100,245],[593,319],[232,351],[406,147]]
+        };
 
-
-     describe("kdtree.buildTree2", function(){
-
-         //bug fix for
-         it('should find exact number of neighbours', function(){
-             //given
-            var data = [
-                [168, 284],
-                [217, 421],
-                [271, 152],
-                [112, 199],
-                [548, 335],
-                [184, 456],
-                [564, 300],
-                [505, 172],
-                [317, 318],
-                [96, 450],
-                [39, 63]
-            ];
-            var search = [398, 145];
-            var noOfNeighs = 6;
-
+        //bug fix for
+        given([data.data3, [223, 169], 10], [data.data2, [482, 417], 10], [data.data1, [398, 145], 6])
+        .it('should find exact number of neighbours', function(data, search, noOfNeighs) {
+            //given
             var tree = cut.buildTree(data);
             console.log(tree);
+
             //when
             var result = tree.search(search, noOfNeighs);
+            var res2 = utils.linearSearch(data, search, noOfNeighs);
 
             console.log(result);
+            console.log(res2);
             //then
             assert(result[0]).isNotNull();
-         });
-     });
+            assert(result).arrayEquals(res2);
+        });
+    });
+
+
 
     describe("kdtree.utils.partition", function() {
-        var utils = cut.utils;
         given(
             [[1, 2, 3, 4, 5], 4, [1, 2, 3, 4, 5]],
             [[5, 3, 4, 2, 1], 4, [1, 3, 4, 2, 5]],
@@ -66,7 +62,6 @@ QUnit.specify("kdtree", function() {
     });
 
     describe("kdtree.utils.select", function() {
-        var utils = cut.utils;
         given(
             [[1, 2, 3, 4, 5], 4, 5],
             [[5, 3, 4, 2, 1], 3, 4],
@@ -84,7 +79,6 @@ QUnit.specify("kdtree", function() {
     });
 
     describe("kdtree.utils.median", function() {
-        var utils = cut.utils;
         given(
             [[1, 2, 3, 4, 5], 3],
             [[5, 3, 4, 2, 1, 6], 4],

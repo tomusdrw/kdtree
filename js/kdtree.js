@@ -61,8 +61,36 @@
          */
         median : function utilsMedian(data) {
             return kdtree.utils.select(data, Math.floor(data.length / 2));
+        },
+        linearSearch : function(data, point, noOfNeighs) {
+            var K = point.length;
+            var calcDist = function(a, b) {
+                var d, sum = 0;
+                for(var i = 0; i < K; ++i) {
+                    d = a[i] - b[i];
+                    sum = sum + d * d;
+                }
+                return Math.sqrt(sum);
+            };
+            var distances = [];
+            data.forEach(function(p) {
+                distances.push({
+                    dist : calcDist(p, point),
+                    point : p
+                });
+            });
+            //sort distances
+            distances.sort(function(a, b) {
+                return a.dist - b.dist;
+            });
+            var ret = [];
+            for(var i = 0; i < noOfNeighs; ++i) {
+                ret.push(distances[i].point);
+            }
+            return ret.reverse();
         }
     };
+
 
     /**
      * Terminal node - bucket
@@ -167,16 +195,19 @@
                 //Search in bucket
                 if(node.isBucket) {
                     node.values.forEach(function(x) {
-                        var i, dist, len;
+                        var i, dist, len, breaked;
                         dist = kdtree.distance(x, point, opts);
                         len = queue.length;
                         //Check elements in queue but only if it is full
-                        if(queue[0].node !== null) {
-                            for( i = 0; i < len; ++i) {
-                                if(dist >= queue[i].dist) {
-                                    return;
-                                }
+                        breaked = false;
+                        for( i = 0; i < len; ++i) {
+                            if(dist < queue[i].dist) {
+                                breaked = true;
+                                break;
                             }
+                        }
+                        if(!breaked) {
+                            return
                         }
                         //update queue
                         queue.push({
@@ -190,6 +221,7 @@
                         //trim
                         queue.splice(0, 1);
                     });
+
                     if(kdtree.ballWithinBounds(point, bounds, queue, opts)) {
                         return true;
                     }
@@ -236,7 +268,7 @@
                 }
                 //Terminate?
                 if(kdtree.ballWithinBounds(point, bounds, queue, opts)) {
-                    return true;
+                   return true;
                 }
                 return false;
             };
@@ -269,11 +301,16 @@
         return opts.coordinateDistance(point[coord], bound[coord]);
     };
     kdtree.ballWithinBounds = function kdtreeBallWithinBounds(point, bounds, queue, opts) {
-        var d, firstDist;
-        firstDist = queue[0].dist;
+        var d, firstDist, overlapsLower, overlapsUpper;
+        firstDist = queue[0].dist * queue[0].dist;
 
         for( d = 0; d < opts.k; ++d) {
-            if(kdtree.coordinateDistance(d, point, bounds.lower, opts) <= firstDist || kdtree.coordinateDistance(d, point, bounds.upper, opts) <= firstDist) {
+            overlapsLower = kdtree.coordinateDistance(d, point, bounds.lower, opts) <= firstDist;
+            if(overlapsLower) {
+                return false;
+            }
+            overlapsUpper = kdtree.coordinateDistance(d, point, bounds.upper, opts) <= firstDist;
+            if(overlapsUpper) {
                 return false;
             }
         }
