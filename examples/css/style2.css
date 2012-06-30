@@ -1,3 +1,32 @@
 label {
     display: block;
 }
+#canvas {
+    box-shadow: 0 0 0 #FBB829;
+}
+#canvas.drawing {
+    background-color: #F0F0D8;
+    cursor: crosshair;
+    box-shadow: 0 0 50px #606048;
+    -webkit-transition: box-shadow 0.05s ease-in-out;
+    -moz-transition: box-shadow 0.05s ease-in-out;
+    transition: box-shadow 0.05s ease-in-out;
+}
+#scaled {
+    border: 1px solid #b2b2b2;
+}
+#canvas.fixed {
+    position: fixed;
+}
+.symbols {
+    height: 450px;
+    overflow: auto;
+    text-align: center;
+}
+.symbols img {
+    margin: 1em;
+}
+.not_recognized {
+    color: #c00;
+    font-weight: bold;
+}

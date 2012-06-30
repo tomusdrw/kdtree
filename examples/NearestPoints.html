@@ -19,20 +19,26 @@
         <div role="main">
             <h1 class="grid_12">Nearest points</h1>
             <!-- Settings //-->
-            <div class="grid_2 settings">
+            <div class="grid_3 settings">
                 <div>
                     <label># points</label>
-                    <input id="points" type="number" min="10" max="100000" value="10000" />
-                    <label># of neigbours</label>
-                    <input id="neighs" type="number" min="1" max="1000" value="10" />
+                    <input id="points" type="number" min="10" max="15000" value="5000" />
+                    <label># neigbours</label>
+                    <input id="neighs" type="number" min="1" max="1000" value="50" />
                 </div>
                 <br />
                 <button id="populate">
                     Populate
                 </button>
+                <p>
+                    Open console to see execution times.
+                </p>
+                <p>
+                    NOTE: Linear search will perform faster, when number of neighbours is big (comparing to number of points) and bucket size is small.
+                </p>
             </div>
             <!-- Canvas //-->
-            <div class="grid_10 canvas">
+            <div class="grid_9 canvas">
                 <canvas width="600" height="500" id="canvas">
                     Canvas not supported
                 </canvas>

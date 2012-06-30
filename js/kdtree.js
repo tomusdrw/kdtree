@@ -193,6 +193,7 @@
             var search = function kdtreeSearch2(node) {
                 //Search in bucket
                 if(node.isBucket) {
+                    //TODO: this is shitty: try to sort bucket by distance merge two lists and trim
                     node.values.forEach(function(x) {
                         var i, dist, len;
                         dist = kdtree.distance(x, point, opts);
@@ -390,7 +391,6 @@
         median = kdtree.median(maxCoord, data);
         part = kdtree.partition(maxCoord, median, data);
 
-        //TODO: maybe some callbacks to make it "less recursive"?
         left = kdtree.buildTree(part.left, opts);
         right = kdtree.buildTree(part.right, opts);
 
