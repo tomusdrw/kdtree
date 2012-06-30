@@ -17,7 +17,7 @@ var data = [
 	[1, 2, 3, {additional: "data"}],
 	[4, 5, 6, {additional: "data2"}]
 ];
-var k = data[0].length;
+var k = data[0].length - 1;
 var options = {
 	/**
 	 * Defines bucket (terminal node) maximal size (default: 10)
@@ -26,7 +26,7 @@ var options = {
 	/**
 	 * Data dimension (default: data[0].length)
 	 */
-	k : k - 1,
+	k : k,
 	/**
 	 * Dissimilarity function (default: sqrt)
 	 */
@@ -45,8 +45,8 @@ var tree = kdtree.buildTree(data, options);
 var noOfNeighboursToFind = 2;
 var neighbours = tree.search([1, 2, 3], noOfNeighboursToFind);
 
-neighbours[0][4].additional === "data"; //true
-neighbours[1][4].additional === "data2"; //true
+neighbours[0][k].additional === "data"; //true
+neighbours[1][k].additional === "data2"; //true
 ```
 
 Implementation is based on paper:
