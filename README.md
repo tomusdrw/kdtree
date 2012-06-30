@@ -2,10 +2,12 @@ JavaScript [k-d tree](http://en.wikipedia.org/wiki/K-d_tree) implementation.
 ================================================
 
 Supports:
- * building balanced tree from predefined data 
+ * building balanced tree from predefined data
  * performing search for any given number of nearest neighbours
- 
+
 See [examples of usage](http://examples.blacksoft.eu/blacksoft.kdtree/examples):
+ * [Nearest points on plane](http://examples.blacksoft.eu/blacksoft.kdtree/examples/NearestPoints.html)
+ * [Classification (knn method)](http://examples.blacksoft.eu/blacksoft.kdtree/examples/Classification.html)
 
 See [test suite](http://examples.blacksoft.eu/blacksoft.kdtree/tests/kdtree.html).
 
@@ -47,4 +49,6 @@ neighbours[0][4].additional === "data"; //true
 neighbours[1][4].additional === "data2"; //true
 ```
 
+Implementation is based on paper:
+JH Friedman, JL Bentley, "An algorithm for finding best matches in logarithmic expected time.", 1977
 
